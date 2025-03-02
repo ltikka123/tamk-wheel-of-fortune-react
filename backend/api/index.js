@@ -1,8 +1,11 @@
 const express = require("express");
+
+// new express applicaiton instance
 const app = express();
 
 const playerRouter = require("./routes/player.router");
 
+// path used by API
 app.use("/api/players", playerRouter);
 
 app.use((req, res) => {
@@ -10,6 +13,9 @@ app.use((req, res) => {
 });
 
 const port = process.env.PORT || 3000;
+
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
 });
+
+

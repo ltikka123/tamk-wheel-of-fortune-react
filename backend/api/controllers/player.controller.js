@@ -1,42 +1,46 @@
-let players = [
-    { name: "Alice", id: "8622291" },
-    { name: "Bob", id: "1785684" },
-];
+const playerModel = require('../models/players.model');
 
-const getAllPlayers = (req, res) => {
-    res.json({ players });
-};
 
-const getPlayerById = (req, res) => {
-    const player = players[req.params.userId];
+const getAllPlayers = async (req, res) => {
+    const p = await playerModel.getAllPlayers();
 
-    if (player) {
-        res.json({player});
+    if (p === undefined || p.length === 0) {
+        res.status(404).json({error: "No players to fetch"});
     } else {
-        res.status(404).json({error: "Player not found"});
+        res.json({ players: p });
     }
 };
 
-const addPlayer = (req, res) => {
+const getPlayerById = async (req, res) => {
+
+    const p = await playerModel.getPlayersById(req.params.userId);
+
+    if (p === undefined || p.length === 0) {
+        res.status(404).json({error: "Player not found"});
+    } else {
+        res.json({p});
+    }
+};
+
+const addPlayer = async (req, res) => {
 
     const name = req.params.userName;
+    const response = await playerModel.addPlayer(name);
 
-    if (name) {
-        players.push({ name: req.params.userName, id: Math.random().toString().slice(2, 9)});
-        res.send("Player added");
+    if (response) {
+        res.send(response);
     } else {
         res.status(400).json({error: "Invalid parameter"});
     }
 
 };
 
-const removePlayer = (req, res) => {
+const removePlayer = async (req, res) => {
     const playerId = req.params.userId;
-    const initialLength = players.length;
-    players = players.filter(player => player.id !== playerId);
+    const response = await playerModel.deletePlayer(playerId);
     
-    if (players.length < initialLength) {
-        res.send(`Player with ID ${playerId} removed.`);
+    if (response) {
+        res.send(response);
     } else {
         res.status(404).json({ error: "Player not found" });
     }
