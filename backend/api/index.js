@@ -4,11 +4,11 @@ const express = require("express");
 const app = express();
 app.use(express.json());
 
-const playerRouter = require("./routes/player.router");
+const listsRouter = require("./routes/lists.router.js");
 const userRouter = require("./routes/user.router");
 
 // path used by API
-app.use("/api/players", playerRouter);
+app.use("/api/lists", listsRouter);
 app.use("/api/users", userRouter);
 
 app.use((req, res) => {

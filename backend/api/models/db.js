@@ -12,7 +12,7 @@ const pool = new Pool({
     password: 'example',
     host: 'localhost',
     port: 5432,
-    database: 'fortunewheel',
+    database: 'postgres',
 });
 
   module.exports = {pool, db};
