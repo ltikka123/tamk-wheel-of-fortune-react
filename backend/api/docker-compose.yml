@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  fortunewheel-api:
+    image: node:latest
+    container_name: fortunewheel_api
+    working_dir: /usr/src/app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env
+    volumes:
+      - ./app:/usr/src/app
+    command: "node index.js"
+
