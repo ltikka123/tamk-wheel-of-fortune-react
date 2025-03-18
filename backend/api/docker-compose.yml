@@ -15,4 +15,10 @@ services:
     volumes:
       - ./app:/usr/src/app
     command: sh -c "npm install && node index.js"
+    networks:
+      - fortunewheel-net
 
+networks:
+  fortunewheel-net:
+    name: fortunewheel-net
+    driver: bridge
