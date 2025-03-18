@@ -1,39 +1,41 @@
-import React, { useState, useContext } from 'react';
-import Button from '@mui/material/Button';
-import Box from '@mui/material/Box';
-import TextField from '@mui/material/TextField';
-import ListItem from '@mui/material/ListItem';
-import ListItemText from '@mui/material/ListItemText';
-import ListItemButton from '@mui/material/ListItemButton';
+import React, { useState, useContext } from "react";
+import Button from "@mui/material/Button";
+import Box from "@mui/material/Box";
+import TextField from "@mui/material/TextField";
+import ListItem from "@mui/material/ListItem";
+import ListItemText from "@mui/material/ListItemText";
+import ListItemButton from "@mui/material/ListItemButton";
 
-import { FixedSizeList, ListChildComponentProps } from 'react-window';
+import { FixedSizeList, ListChildComponentProps } from "react-window";
 
-import { PlayersContext } from '../../store/players-context';
-import { Player } from '../../models/player.model';
-import DeleteIcon from '@mui/icons-material/Delete';
-import IconButton from '@mui/material/IconButton';
+import { PlayersContext } from "../../store/players-context";
+import { Player } from "../../models/player.model";
+import DeleteIcon from "@mui/icons-material/Delete";
+import IconButton from "@mui/material/IconButton";
+import { AuthContext } from "../../store/auth-context";
 
 const PlayerList = () => {
-  const [newPlayerId, setNewPlayerId] = useState<string>('');
-  const [newPlayerName, setNewPlayerName] = useState<string>('');
-  const [idError, setIdError] = useState<string>('');
-  const [nameError, setNameError] = useState<string>('');
+  const [newPlayerId, setNewPlayerId] = useState<string>("");
+  const [newPlayerName, setNewPlayerName] = useState<string>("");
+  const [idError, setIdError] = useState<string>("");
+  const [nameError, setNameError] = useState<string>("");
 
   const playersCtx = useContext(PlayersContext);
+  const authCtx = useContext(AuthContext);
 
   const handleIdChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const idInput = e.target.value;
 
-    if (idInput.trim() === '') {
-      setIdError('ID is required');
+    if (idInput.trim() === "") {
+      setIdError("ID is required");
     }
 
     if (idInput.trim().length > 0) {
-      setIdError('');
+      setIdError("");
     }
     // id must not over 7 letters
     if (idInput.trim().length > 7) {
-      setIdError('ID must not exceed 7 letters');
+      setIdError("ID must not exceed 7 letters");
     }
 
     setNewPlayerId(idInput);
@@ -42,22 +44,31 @@ const PlayerList = () => {
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const nameInput = e.target.value;
 
-    if (nameInput.trim() === '') {
-      setNameError('Name is required');
+    if (nameInput.trim() === "") {
+      setNameError("Name is required");
     }
 
     if (nameInput.trim().length > 0) {
-      setNameError('');
+      setNameError("");
     }
 
     setNewPlayerName(nameInput);
   };
 
   const handleAddPlayer = () => {
-    if (idError !== '' || nameError !== '') return;
+    if (idError !== "" || nameError !== "") return;
+
+    // name needs to be provided and user authenticated
+    if (
+      newPlayerName === "" ||
+      newPlayerName === null ||
+      !authCtx.isAuthenticated
+    ) {
+      return;
+    }
 
     if (playersCtx.players.some((player) => player.id === newPlayerId)) {
-      setIdError('ID already exists');
+      setIdError("ID already exists");
       return;
     }
 
@@ -66,12 +77,12 @@ const PlayerList = () => {
       name: newPlayerName,
     };
     playersCtx.addPlayer(newPlayer);
-    setNewPlayerId(''); // Clear the ID field after adding a player
-    setNewPlayerName(''); // Clear the Name field after adding a player
+    setNewPlayerId(""); // Clear the ID field after adding a player
+    setNewPlayerName(""); // Clear the Name field after adding a player
   };
 
   const handleEnterKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
+    if (e.key === "Enter") {
       handleAddPlayer();
     }
   };
@@ -80,7 +91,8 @@ const PlayerList = () => {
     <ListItem style={style} key={index} component="div" disablePadding>
       <ListItemButton>
         <ListItemText
-          primary={`${playersCtx.players[index].id} - ${playersCtx.players[index].name}`}
+          //primary={`${playersCtx.players[index].id} - ${playersCtx.players[index].name}`}
+          primary={`${playersCtx.players[index].name}`}
         />
         <IconButton
           edge="end"
@@ -95,18 +107,7 @@ const PlayerList = () => {
 
   return (
     <Box sx={{ mt: 2, ml: 5 }}>
-      <Box sx={{ display: 'flex', mb: 1 }}>
-        <TextField
-          id="player-id-input"
-          label="ID"
-          variant="outlined"
-          size="small"
-          value={newPlayerId}
-          onChange={handleIdChange}
-          onKeyDown={handleEnterKeyDown}
-          error={idError !== ''}
-          helperText={idError}
-        />
+      <Box sx={{ display: "flex", mb: 1 }}>
         <TextField
           id="player-name-input"
           label="Name"
@@ -116,7 +117,7 @@ const PlayerList = () => {
           sx={{ ml: 2 }}
           onChange={handleNameChange}
           onKeyDown={handleEnterKeyDown}
-          error={nameError !== ''}
+          error={nameError !== ""}
           helperText={nameError}
         />
         <Button
@@ -129,10 +130,10 @@ const PlayerList = () => {
       </Box>
       <Box
         sx={{
-          width: '100%',
+          width: "100%",
           height: 400,
           maxWidth: 360,
-          bgcolor: 'background.paper',
+          bgcolor: "background.paper",
         }}
       >
         <FixedSizeList

@@ -1,73 +1,90 @@
-import React, { createContext, useState, useRef, useEffect } from 'react';
-import { Player } from '../models/player.model';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useRef,
+  useEffect,
+} from "react";
+import { Player } from "../models/player.model";
+import { AuthContext } from "./auth-context";
+import { toast } from "react-toastify";
+import { COOKIE_TOKEN, API_URL } from "../Definitions";
+import { fetchList, addToList, removeFromList } from "../api/lists";
 
 type PlayersContextObj = {
   players: Player[];
-  addPlayer: (player: Player) => void;
-  removePlayer: (id: string) => void;
+  addPlayer: (player: Player) => Promise<void>;
+  removePlayer: (id: string) => Promise<void>;
 };
 
 export const PlayersContext = createContext<PlayersContextObj>({
   players: [],
-  addPlayer: () => {},
-  removePlayer: () => {},
+  addPlayer: async () => {},
+  removePlayer: async () => {},
 });
 
 interface Props {
   children: React.ReactNode;
 }
 
-const generatePlayers = (numPlayers: number) => {
-  const names = [
-    'Alice',
-    'Bob',
-    'Charlie',
-    'Dave',
-    'Eve',
-    'Frank',
-    'Grace',
-    'Heidi',
-    'Ivan',
-    'Judy',
-    'Mallory',
-    'Oscar',
-    'Peggy',
-    'Trent',
-    'Walter',
-    'Xavier',
-    'Yvonne',
-    'Zack',
-    'Uma',
-    'Victor',
-  ];
-  const generatedPlayers: Player[] = [];
-
-  const generateId = () => {
-    return Math.random().toString().slice(2, 9);
-  };
-
-  for (let i = 0; i < numPlayers; i++) {
-    const name = names[i % names.length];
-    const suffix = Math.floor(i / names.length);
-    const playerName = suffix === 0 ? name : `${name} ${suffix}`;
-    generatedPlayers.push({ id: generateId(), name: playerName });
-  }
-
-  return generatedPlayers;
-};
-
 const PlayersContextProvider = ({ children }: Props) => {
   //change the number of players below to change the number of random generated players, do not go under 4, not working atm
-  const [players, setPlayers] = useState<Player[]>(generatePlayers(10));
+  const [players, setPlayers] = useState<Player[]>([]);
 
-  const addPlayer = (player: Player) => {
-    setPlayers((prevPlayers) => [...prevPlayers, player]);
+  const authCtx = useContext(AuthContext);
+
+  useEffect(() => {
+    if (!authCtx.isAuthenticated) {
+      return;
+    }
+
+    fetchList("players")
+      .then((data) => {
+        if (!data.error) {
+          setPlayers(transformPlayersData(data)); // transform objects from {id: num, data: string} to {id: num, name: string}
+        }
+      })
+      .catch((error) => {
+        toast.error("Failed to fetch players.");
+        console.error("Failed to fetch players:", error);
+      });
+  }, [authCtx.isAuthenticated]);
+
+  const transformPlayersData = (
+    data: { id: number; data: string }[]
+  ): Player[] => {
+    return data.map(
+      ({ id, data }: { id: number; data: string }): Player => ({
+        id: id.toString(),
+        name: data,
+      })
+    );
   };
 
-  const removePlayer = (id: string) => {
-    setPlayers((prevPlayers) =>
-      prevPlayers.filter((player) => player.id !== id)
-    );
+  const addPlayer = async (player: Player) => {
+    addToList("players", player.name)
+      .then((data) => {
+        if (data.error) {
+          toast.error(data.error);
+          return;
+        } else {
+          setPlayers(transformPlayersData(data));
+        }
+      })
+      .catch((error) => console.log("Failed to add player: " + error));
+  };
+
+  const removePlayer = async (id: string) => {
+    removeFromList("players", id)
+      .then((data) => {
+        if (data.error) {
+          toast.error(data.error);
+          return;
+        } else {
+          setPlayers(transformPlayersData(data));
+        }
+      })
+      .catch((error) => console.log("Failed to remove player: " + error));
   };
 
   const contextValue: PlayersContextObj = {

@@ -22,7 +22,7 @@ const register = async (req, res) =>  {
 
         const userExists = await userModel.getUser(username);
         if (userExists !== null && userExists.length !== 0){
-          res.status(400).send("Invalid username");
+          res.status(400).json({error: "Invalid username"});
           console.log("[REGISTRATION]: User already exists: " + username);
           return;
         }
@@ -30,11 +30,19 @@ const register = async (req, res) =>  {
         const passwordHash = await bcrypt.hash(password, 10);
 
         await userModel.addUser(username, passwordHash);
-        res.status(201).send(username);
+
+
+        // reply with JWT token
+        const token = jwt.sign({ username: username }, process.env.JWT_SECRET);
+        res.cookie('token', token, { httpOnly: false, secure: true, // Ensure this is true if you're using HTTPS
+            sameSite: 'None' // Needed for cross-origin cookies
+        });
+        res.status(201).send({token});
+
         console.log("[REGISTRATION]: Registered user " + username);
       } catch (error) {
-        console.log("Registeration failed")
-        res.status(400).send(error);
+        console.log("Registeration failed: " + error);
+        res.status(400).json({error: "Registeration failed"});
       }
 }
 
@@ -44,7 +52,7 @@ const login = async (req, res) => {
 
     // Check that both username and password are provided
     if (username === undefined || password === undefined) {
-        res.status(400).send("Please provide both username and password");
+        res.status(400).json({error: "Provide both username and password"});
         return;
     }
 
@@ -52,7 +60,7 @@ const login = async (req, res) => {
     const user = await userModel.getUser(username);
     if (!user || user.length === 0) {
         console.log(`[LOGIN]: User not found: ${username}`);
-        res.status(400).send("Invalid credentials");
+        res.status(400).json({error: "Invalid credentials"});
         return;
     }
 
@@ -60,12 +68,15 @@ const login = async (req, res) => {
     const passwordMatch = await bcrypt.compare(password, user[0].password_hash);
     if (!passwordMatch) {
         console.log(`[LOGIN]: Wrong password for user: ${username}`);
-        res.status(400).send("Invalid credentials");
+        res.status(400).json({error: "Invalid credentials"});
         return;
     }
 
     const token = jwt.sign({ username: username }, process.env.JWT_SECRET);
 
+    res.cookie('token', token, { httpOnly: false, secure: true, // Ensure this is true if you're using HTTPS
+        sameSite: 'None' // Needed for cross-origin cookies
+    });
     res.status(200).send({token});
 
 

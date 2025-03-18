@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useRef, useState, useMemo } from 'react';
 
 import styles from './Wheel.module.scss';
 import { PlayersContext } from '../../store/players-context';
+import { AuthContext } from '../../store/auth-context';
 import {
   FormControlLabel,
   FormGroup,
@@ -17,6 +18,7 @@ const Wheel = () => {
   const [isWebMode, setIsWebMode] = useState<boolean>(true);
   const ws = useRef<WebSocket | null>(null);
   const playersCtx = useContext(PlayersContext);
+  const authCtx = useContext(AuthContext);
   const players = playersCtx.players;
 
   const totalSegments = players.length;
@@ -49,6 +51,12 @@ const Wheel = () => {
   }, [totalSegments]);
 
   const handleSpinWheel = () => {
+
+    // Don't do anything if user isn't authenticated
+    if (!authCtx.isAuthenticated) {
+      return;
+    }
+
     const minDegree = 360 * 3;
     const maxDegree = 360 * 10;
     const randomDegree =
@@ -68,7 +76,7 @@ const Wheel = () => {
       const winningIndex = Math.floor(adjustedDegree / segmentTheta);
       const winner = players[winningIndex];
 
-      console.log('Winner:', winner.name);
+      console.log('Winner:', winner?.name);
     }, 4000);
   };
 

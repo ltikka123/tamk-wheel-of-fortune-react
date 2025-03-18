@@ -44,7 +44,7 @@ const addItemToList = async (listId, itemName) => {
 };   
 
 const deleteItemFromList = async (userId, listName, itemName) => {
-    const result = await db.pool.query("DELETE FROM items WHERE items_id = (SELECT id FROM lists WHERE user_id = $1 AND list_name = $2) AND data = $3 RETURNING *", [userId, listName, itemName]);
+    const result = await db.pool.query("DELETE FROM items WHERE items_id = (SELECT id FROM lists WHERE user_id = $1 AND list_name = $2) AND id = $3 RETURNING *", [userId, listName, itemName]);
     return result.rowCount > 0;
 };
 
