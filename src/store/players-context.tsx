@@ -8,7 +8,6 @@ import React, {
 import { Player } from "../models/player.model";
 import { AuthContext } from "./auth-context";
 import { toast } from "react-toastify";
-import { COOKIE_TOKEN, API_URL } from "../Definitions";
 import { fetchList, addToList, removeFromList } from "../api/lists";
 
 type PlayersContextObj = {
@@ -35,6 +34,7 @@ const PlayersContextProvider = ({ children }: Props) => {
 
   useEffect(() => {
     if (!authCtx.isAuthenticated) {
+      setPlayers([]); // if user is not logged in, clear players
       return;
     }
 
